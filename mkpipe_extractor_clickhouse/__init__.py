@@ -1,5 +1,7 @@
 from mkpipe.spark import JdbcExtractor
 
+JAR_PACKAGES = ['com.clickhouse:clickhouse-jdbc:0.8.0']
+
 
 class ClickhouseExtractor(JdbcExtractor, variant='clickhouse'):
     driver_name = 'clickhouse'
