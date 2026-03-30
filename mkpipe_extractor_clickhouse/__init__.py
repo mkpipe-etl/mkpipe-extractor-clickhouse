@@ -1,12 +1,12 @@
 import os
 from typing import Optional
 
-from mkpipe.spark.base import BaseExtractor
 from mkpipe.models import ConnectionConfig, ExtractResult, TableConfig
+from mkpipe.spark.base import BaseExtractor
 from mkpipe.utils import get_logger
 
 JAR_PACKAGES = [
-    'com.clickhouse.spark:clickhouse-spark-runtime-4.0_2.13:0.8.1',
+    'com.clickhouse.spark:clickhouse-spark-runtime-4.0_2.13:0.10.0',
     'com.clickhouse:clickhouse-http-client:0.7.2',
     'org.apache.httpcomponents.client5:httpclient5:5.3.1',
 ]
@@ -46,17 +46,23 @@ class ClickhouseExtractor(BaseExtractor, variant='clickhouse'):
         if table.custom_query:
             return table.custom_query
         if table.custom_query_file:
-            path = os.path.abspath(os.path.join(os.getcwd(), 'sql', table.custom_query_file))
+            path = os.path.abspath(
+                os.path.join(os.getcwd(), 'sql', table.custom_query_file)
+            )
             with open(path) as f:
                 return f.read()
         return None
 
-    def extract(self, table: TableConfig, spark, last_point: Optional[str] = None) -> ExtractResult:
-        logger.info({
-            'table': table.target_name,
-            'status': 'extracting',
-            'replication_method': table.replication_method.value,
-        })
+    def extract(
+        self, table: TableConfig, spark, last_point: Optional[str] = None
+    ) -> ExtractResult:
+        logger.info(
+            {
+                'table': table.target_name,
+                'status': 'extracting',
+                'replication_method': table.replication_method.value,
+            }
+        )
 
         custom_query = self._resolve_custom_query(table)
 
@@ -79,8 +85,11 @@ class ClickhouseExtractor(BaseExtractor, variant='clickhouse'):
             df = self._build_reader(spark, sql, is_query=True)
 
             from pyspark.sql import functions as F
+
             row = df.agg(F.max(table.iterate_column).alias('max_val')).first()
-            last_point_value = str(row['max_val']) if row and row['max_val'] is not None else None
+            last_point_value = (
+                str(row['max_val']) if row and row['max_val'] is not None else None
+            )
         else:
             write_mode = 'overwrite'
             if custom_query:
@@ -90,5 +99,13 @@ class ClickhouseExtractor(BaseExtractor, variant='clickhouse'):
                 df = self._build_reader(spark, table.name)
             last_point_value = None
 
-        logger.info({'table': table.target_name, 'status': 'extracted', 'write_mode': write_mode})
-        return ExtractResult(df=df, write_mode=write_mode, last_point_value=last_point_value)
+        logger.info(
+            {
+                'table': table.target_name,
+                'status': 'extracted',
+                'write_mode': write_mode,
+            }
+        )
+        return ExtractResult(
+            df=df, write_mode=write_mode, last_point_value=last_point_value
+        )
