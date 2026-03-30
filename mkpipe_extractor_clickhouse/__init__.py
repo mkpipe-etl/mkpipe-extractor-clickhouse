@@ -39,7 +39,7 @@ class ClickhouseExtractor(BaseExtractor, variant='clickhouse'):
         if is_query:
             reader = reader.option('query', table_or_query)
         else:
-            reader = reader.option('dbtable', table_or_query)
+            reader = reader.option('table', f'{self.database}.{table_or_query}')
         return reader.load()
 
     def _resolve_custom_query(self, table: TableConfig) -> Optional[str]:
