@@ -82,7 +82,7 @@ class ClickhouseExtractor(BaseExtractor, variant='clickhouse'):
                     else:
                         conditions.append(f"{table.iterate_column} < '{table.filter_upper_bound}'")
                 filter_clause = 'WHERE ' + ' AND '.join(conditions)
-                write_mode = 'overwrite'
+                write_mode = 'append'
             elif last_point:
                 write_mode = 'append'
                 if table.iterate_column_type == 'int':
